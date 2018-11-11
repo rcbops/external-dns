@@ -116,6 +116,17 @@ func getAuthSettings() (gophercloud.AuthOptions, error) {
 	return opts, nil
 }
 
+type CustomRoundTripper struct {
+	transport http.RoundTripper
+}
+
+// RoundTrip satifies the RoundTripper interface
+func (rt *CustomRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	// Force HTTPS
+	req.URL.Scheme = "https"
+	return rt.transport.RoundTrip(req)
+}
+
 // authenticate in OpenStack and obtain Designate service endpoint
 func createDesignateServiceClient() (*gophercloud.ServiceClient, error) {
 	opts, err := getAuthSettings()
@@ -159,6 +170,9 @@ func createDesignateServiceClient() (*gophercloud.ServiceClient, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	client.HTTPClient.Transport = &CustomRoundTripper{transport}
+
 	log.Infof("Found OpenStack Designate service at %s", client.Endpoint)
 	return client, nil
 }

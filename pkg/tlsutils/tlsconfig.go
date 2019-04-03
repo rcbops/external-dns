@@ -73,7 +73,11 @@ func NewTLSConfig(certPath, keyPath, caPath, serverName string, insecure bool, m
 // loads CA cert
 func loadRoots(caPath string) (*x509.CertPool, error) {
 	if caPath == "" {
-		return nil, nil
+		certpool, err := x509.SystemCertPool()
+		if err != nil {
+			return nil, err
+		}
+		return certpool, nil
 	}
 
 	roots := x509.NewCertPool()
